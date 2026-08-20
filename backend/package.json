@@ -2,11 +2,13 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Production-ready Authentication System with Express, MongoDB, JWT & User Data Scoping",
+  "description": "Node.js Express backend server template",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
+    "dev": "node --watch src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -20,6 +22,9 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.3.1"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
