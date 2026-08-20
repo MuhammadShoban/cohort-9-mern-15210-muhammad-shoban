@@ -1,47 +1,12 @@
-import express from 'express';
 import dotenv from 'dotenv';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-
 import connectDB from './config/db.js';
-import authRoutes from './routes/authRoutes.js';
-import userResourceRoutes from './routes/userResourceRoutes.js';
-import { notFound, errorHandler } from './middleware/errorMiddleware.js';
+import app from './app.js';
 
 // Load environment variables
 dotenv.config();
 
 // Initialize MongoDB connection
 connectDB();
-
-const app = express();
-
-// Security & Body parsing Middleware
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-    credentials: true, // Allow cookies over cross-origin requests
-  })
-);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/user-data', userResourceRoutes);
-
-// Health Check Endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'online',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// Error handling middleware
-app.use(notFound);
-app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
