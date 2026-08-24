@@ -1,5 +1,8 @@
 /**
  * 404 Not Found Middleware for unhandled routes
+ * @param {import('express').Request} req - Express request object
+ * @param {import('express').Response} res - Express response object
+ * @param {import('express').NextFunction} next - Express next function
  */
 export const notFound = (req, res, next) => {
   const error = new Error(`Resource Not Found - ${req.originalUrl}`);
@@ -9,6 +12,10 @@ export const notFound = (req, res, next) => {
 
 /**
  * Global Error Handler Middleware
+ * @param {any} err - Error object
+ * @param {import('express').Request} req - Express request object
+ * @param {import('express').Response} res - Express response object
+ * @param {import('express').NextFunction} next - Express next function
  */
 export const errorHandler = (err, req, res, next) => {
   let statusCode = res.statusCode === 200 ? 500 : res.statusCode;

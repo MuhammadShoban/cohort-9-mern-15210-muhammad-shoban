@@ -4,8 +4,10 @@ import cookieParser from 'cookie-parser';
 
 import authRoutes from './routes/authRoutes.js';
 import userResourceRoutes from './routes/userResourceRoutes.js';
+import statusRoutes from './routes/status.routes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
+/** @type {import('express').Application} */
 const app = express();
 
 // Security & Body parsing Middleware
@@ -19,9 +21,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Base Route
+app.get('/', (req, res) => {
+  res.json({ message: 'Server is Running fine .........' });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user-data', userResourceRoutes);
+app.use('/api', statusRoutes);
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {
@@ -32,21 +40,6 @@ app.get('/health', (req, res) => {
 });
 
 // Error handling middleware
-import statusRoutes from './routes/status.routes.js';
-import { notFound, errorHandler } from './middleware/error.middleware.js';
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.get('/', (req, res) => {
-  res.json({ message: 'Server is Running fine .........' });
-});
-
-app.use('/api', statusRoutes);
-
 app.use(notFound);
 app.use(errorHandler);
 

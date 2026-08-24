@@ -5,23 +5,43 @@ import app from './app.js';
 // Load environment variables
 dotenv.config();
 
-// Initialize MongoDB connection
-connectDB();
-
+/** @type {string|number} */
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
-  console.log(
-    `Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`
-  );
-});
+/** @type {import('http').Server|null} */
+let server = null;
+
+/**
+ * Boots the server by establishing a database connection first,
+ * then starting the Express HTTP listener.
+ * @returns {Promise<void>}
+ */
+const bootstrap = async () => {
+  try {
+    // Wait for MongoDB connection to complete successfully
+    await connectDB();
+
+    server = app.listen(PORT, () => {
+      console.log(
+        `Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`
+      );
+    });
+  } catch (error) {
+    console.error(`Server bootstrap failure: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+// Start the server bootstrap process
+bootstrap();
 
 // Handle unhandled promise rejections gracefully
 process.on('unhandledRejection', (err) => {
-  console.error(`Unhandled Rejection Error: ${err.message}`);
-  server.close(() => process.exit(1));
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  const errorMsg = err instanceof Error ? err.message : String(err);
+  console.error(`Unhandled Rejection Error: ${errorMsg}`);
+  if (server) {
+    server.close(() => process.exit(1));
+  } else {
+    process.exit(1);
+  }
 });

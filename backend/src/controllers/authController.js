@@ -11,7 +11,17 @@ export const registerUser = async (req, res, next) => {
     const { name, email, password } = req.body;
 
     // 1. Basic validation
-    if (!name || !email || !password) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (
+      typeof name !== 'string' ||
+      typeof email !== 'string' ||
+      typeof password !== 'string' ||
+      name.trim().length === 0 ||
+      name.length > 50 ||
+      email.trim().length === 0 ||
+      !emailRegex.test(email.trim()) ||
+      password.length < 6
+    ) {
       res.status(400);
       return next(new Error('Please provide name, email, and password'));
     }
@@ -40,7 +50,6 @@ export const registerUser = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: 'Account created successfully',
-      token,
       user: {
         id: user._id,
         name: user.name,
@@ -64,7 +73,14 @@ export const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
 
     // 1. Basic validation
-    if (!email || !password) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (
+      typeof email !== 'string' ||
+      typeof password !== 'string' ||
+      email.trim().length === 0 ||
+      password.length === 0 ||
+      !emailRegex.test(email.trim())
+    ) {
       res.status(400);
       return next(new Error('Please provide email and password'));
     }
@@ -94,7 +110,6 @@ export const loginUser = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Logged in successfully',
-      token,
       user: {
         id: user._id,
         name: user.name,
