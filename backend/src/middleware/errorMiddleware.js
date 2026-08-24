@@ -1,3 +1,5 @@
+import logger from '../utils/logger.js';
+
 /**
  * 404 Not Found Middleware for unhandled routes
  * @param {import('express').Request} req - Express request object
@@ -53,6 +55,23 @@ export const errorHandler = (err, req, res, next) => {
     statusCode = 401;
     message = 'Authentication token has expired. Please log in again.';
   }
+
+  // Log error using request logger if available, otherwise global logger
+  const log = req.log || logger;
+  log.error(
+    {
+      err: {
+        message: err.message,
+        stack: err.stack,
+        name: err.name,
+        code: err.code,
+      },
+      path: req.originalUrl,
+      method: req.method,
+      statusCode,
+    },
+    `Request Error: ${message}`
+  );
 
   res.status(statusCode).json({
     success: false,

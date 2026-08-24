@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import { generateToken, sendTokenCookie } from '../utils/generateToken.js';
+import logger from '../utils/logger.js';
 
 /**
  * @desc    Register a new user (Signup)
@@ -7,6 +8,7 @@ import { generateToken, sendTokenCookie } from '../utils/generateToken.js';
  * @access  Public
  */
 export const registerUser = async (req, res, next) => {
+  const log = req.log || logger;
   try {
     const { name, email, password } = req.body;
 
@@ -22,6 +24,7 @@ export const registerUser = async (req, res, next) => {
       !emailRegex.test(email.trim()) ||
       password.length < 6
     ) {
+      log.warn({ email }, 'Signup validation failed');
       res.status(400);
       return next(new Error('Please provide name, email, and password'));
     }
@@ -29,6 +32,7 @@ export const registerUser = async (req, res, next) => {
     // 2. Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
+      log.warn({ email }, 'Signup failed: user already exists');
       res.status(400);
       return next(new Error('User with this email already exists'));
     }
@@ -46,6 +50,8 @@ export const registerUser = async (req, res, next) => {
     // 5. Send token in secure HTTP-only cookie
     sendTokenCookie(res, token);
 
+    log.info({ userId: user._id, email: user.email }, 'User registered successfully');
+
     // 6. Return response
     res.status(201).json({
       success: true,
@@ -59,6 +65,7 @@ export const registerUser = async (req, res, next) => {
       },
     });
   } catch (error) {
+    log.error({ err: error }, 'Error registering user');
     next(error);
   }
 };
@@ -69,6 +76,7 @@ export const registerUser = async (req, res, next) => {
  * @access  Public
  */
 export const loginUser = async (req, res, next) => {
+  const log = req.log || logger;
   try {
     const { email, password } = req.body;
 
@@ -81,6 +89,7 @@ export const loginUser = async (req, res, next) => {
       password.length === 0 ||
       !emailRegex.test(email.trim())
     ) {
+      log.warn({ email }, 'Login validation failed');
       res.status(400);
       return next(new Error('Please provide email and password'));
     }
@@ -89,6 +98,7 @@ export const loginUser = async (req, res, next) => {
     const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
 
     if (!user) {
+      log.warn({ email }, 'Login failed: email not found');
       res.status(401);
       return next(new Error('Invalid email or password'));
     }
@@ -96,6 +106,7 @@ export const loginUser = async (req, res, next) => {
     // 3. Compare entered password with stored hashed password
     const isPasswordMatch = await user.matchPassword(password);
     if (!isPasswordMatch) {
+      log.warn({ email, userId: user._id }, 'Login failed: incorrect password');
       res.status(401);
       return next(new Error('Invalid email or password'));
     }
@@ -105,6 +116,8 @@ export const loginUser = async (req, res, next) => {
 
     // 5. Send HTTP-only cookie
     sendTokenCookie(res, token);
+
+    log.info({ userId: user._id, email: user.email }, 'User logged in successfully');
 
     // 6. Return response
     res.status(200).json({
@@ -119,6 +132,7 @@ export const loginUser = async (req, res, next) => {
       },
     });
   } catch (error) {
+    log.error({ err: error }, 'Error logging in user');
     next(error);
   }
 };
@@ -130,7 +144,6 @@ export const loginUser = async (req, res, next) => {
  */
 export const getMe = async (req, res, next) => {
   try {
-    // req.user is attached by the `protect` auth middleware
     res.status(200).json({
       success: true,
       user: req.user,
@@ -146,17 +159,21 @@ export const getMe = async (req, res, next) => {
  * @access  Private
  */
 export const logoutUser = async (req, res, next) => {
+  const log = req.log || logger;
   try {
     res.cookie('jwt', '', {
       httpOnly: true,
       expires: new Date(0), // Expire immediately
     });
 
+    log.info({ userId: req.user?._id }, 'User logged out successfully');
+
     res.status(200).json({
       success: true,
       message: 'Logged out successfully',
     });
   } catch (error) {
+    log.error({ err: error }, 'Error logging out user');
     next(error);
   }
 };

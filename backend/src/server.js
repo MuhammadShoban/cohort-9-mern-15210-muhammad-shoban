@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import app from './app.js';
+import logger from './utils/logger.js';
 
 // Load environment variables
 dotenv.config();
@@ -22,12 +23,13 @@ const bootstrap = async () => {
     await connectDB();
 
     server = app.listen(PORT, () => {
-      console.log(
-        `Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`
+      logger.info(
+        { port: PORT, env: process.env.NODE_ENV || 'development' },
+        'Server started successfully'
       );
     });
   } catch (error) {
-    console.error(`Server bootstrap failure: ${error.message}`);
+    logger.fatal({ err: error }, `Server bootstrap failure: ${error.message}`);
     process.exit(1);
   }
 };
@@ -38,7 +40,7 @@ bootstrap();
 // Handle unhandled promise rejections gracefully
 process.on('unhandledRejection', (err) => {
   const errorMsg = err instanceof Error ? err.message : String(err);
-  console.error(`Unhandled Rejection Error: ${errorMsg}`);
+  logger.error({ err }, `Unhandled Rejection Error: ${errorMsg}`);
   if (server) {
     server.close(() => process.exit(1));
   } else {
