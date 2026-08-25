@@ -11,8 +11,11 @@ dotenv.config();
 test('Auth Integration Tests', async (t) => {
   let server;
   let baseUrl;
+  let originalJwtSecret;
 
   t.before(async () => {
+    originalJwtSecret = process.env.JWT_SECRET;
+    process.env.JWT_SECRET = 'test_jwt_secret_value_123';
     // Mock Mongoose connect to return a dummy connection structure
     mongoose.connect = async () => {
       return {
@@ -91,6 +94,11 @@ test('Auth Integration Tests', async (t) => {
   });
 
   t.after(async () => {
+    if (originalJwtSecret === undefined) {
+      delete process.env.JWT_SECRET;
+    } else {
+      process.env.JWT_SECRET = originalJwtSecret;
+    }
     // Close server
     await new Promise((resolve) => server.close(resolve));
   });

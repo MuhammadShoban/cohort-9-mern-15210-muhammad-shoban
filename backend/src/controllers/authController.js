@@ -10,7 +10,7 @@ import logger from '../utils/logger.js';
 export const registerUser = async (req, res, next) => {
   const log = req.log || logger;
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password } = req.body ?? {};
 
     // 1. Basic validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -24,7 +24,7 @@ export const registerUser = async (req, res, next) => {
       !emailRegex.test(email.trim()) ||
       password.length < 6
     ) {
-      log.warn({ email }, 'Signup validation failed');
+      log.warn('Signup validation failed');
       res.status(400);
       return next(new Error('Please provide name, email, and password'));
     }
@@ -32,7 +32,7 @@ export const registerUser = async (req, res, next) => {
     // 2. Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
-      log.warn({ email }, 'Signup failed: user already exists');
+      log.warn('Signup failed: user already exists');
       res.status(400);
       return next(new Error('User with this email already exists'));
     }
@@ -45,12 +45,12 @@ export const registerUser = async (req, res, next) => {
     });
 
     // 4. Generate JWT token
-    const token = generateToken(user._id);
+    const token = generateToken(user._id.toString());
 
     // 5. Send token in secure HTTP-only cookie
     sendTokenCookie(res, token);
 
-    log.info({ userId: user._id, email: user.email }, 'User registered successfully');
+    log.info({ userId: user._id }, 'User registered successfully');
 
     // 6. Return response
     res.status(201).json({
@@ -78,7 +78,7 @@ export const registerUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   const log = req.log || logger;
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body ?? {};
 
     // 1. Basic validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -89,7 +89,7 @@ export const loginUser = async (req, res, next) => {
       password.length === 0 ||
       !emailRegex.test(email.trim())
     ) {
-      log.warn({ email }, 'Login validation failed');
+      log.warn('Login validation failed');
       res.status(400);
       return next(new Error('Please provide email and password'));
     }
@@ -98,26 +98,26 @@ export const loginUser = async (req, res, next) => {
     const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
 
     if (!user) {
-      log.warn({ email }, 'Login failed: email not found');
+      log.warn('Login failed: email not found');
       res.status(401);
       return next(new Error('Invalid email or password'));
     }
 
     // 3. Compare entered password with stored hashed password
-    const isPasswordMatch = await user.matchPassword(password);
+    const isPasswordMatch = await /** @type {any} */(user).matchPassword(password);
     if (!isPasswordMatch) {
-      log.warn({ email, userId: user._id }, 'Login failed: incorrect password');
+      log.warn({ userId: user._id }, 'Login failed: incorrect password');
       res.status(401);
       return next(new Error('Invalid email or password'));
     }
 
     // 4. Generate JWT token
-    const token = generateToken(user._id);
+    const token = generateToken(user._id.toString());
 
     // 5. Send HTTP-only cookie
     sendTokenCookie(res, token);
 
-    log.info({ userId: user._id, email: user.email }, 'User logged in successfully');
+    log.info({ userId: user._id }, 'User logged in successfully');
 
     // 6. Return response
     res.status(200).json({

@@ -45,15 +45,23 @@ userSchema.pre('save', async function () {
     return;
   }
 
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  } catch (error) {
+    throw new Error('Password hashing failed: ' + error.message);
+  }
 });
 
 /**
  * Method to compare entered plain password with hashed password in database
  */
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  try {
+    return await bcrypt.compare(enteredPassword, this.password);
+  } catch (error) {
+    throw new Error('Password comparison failed: ' + error.message);
+  }
 };
 
 /**

@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import pinoHttp from 'pino-http';
+import { pinoHttp } from 'pino-http';
 
 import authRoutes from './routes/authRoutes.js';
 import userResourceRoutes from './routes/userResourceRoutes.js';
@@ -22,8 +22,7 @@ app.use(
       req: (req) => ({
         id: req.id,
         method: req.method,
-        url: req.url,
-        query: req.query,
+        url: req.url ? req.url.split('?')[0] : '',
         headers: {
           host: req.headers.host,
           'user-agent': req.headers['user-agent'],

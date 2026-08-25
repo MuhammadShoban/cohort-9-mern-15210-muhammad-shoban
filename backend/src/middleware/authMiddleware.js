@@ -26,7 +26,7 @@ export const protect = async (req, res, next) => {
 
   try {
     // Verify token payload
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = /** @type {any} */(jwt.verify(token, process.env.JWT_SECRET || ''));
 
     // Fetch active user from database without returning password hash
     req.user = await User.findById(decoded.id).select('-password');
